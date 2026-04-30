@@ -39,10 +39,15 @@ def main(data_dir: str, *, push_to_hub: bool = False):
     dataset = LeRobotDataset.create(
         repo_id=REPO_NAME,
         robot_type="my_robot",  # 先定义成这个
-        fps=10,  # 这个fps是10吗？
-        # 根据.h5文件，删掉wrist_image，只保留三个
+        fps=30,  
+        # 根据.h5文件
         features={
             "image": {
+                "dtype": "image",
+                "shape": (480, 640, 3),
+                "names": ["height", "width", "channel"],
+            },
+            "wrist_image": {
                 "dtype": "image",
                 "shape": (480, 640, 3),
                 "names": ["height", "width", "channel"],
@@ -83,9 +88,11 @@ def main(data_dir: str, *, push_to_hub: bool = False):
 
                 # 一帧一帧开始处理
                 for t in range(T):
+                    img = np.asarray(cam[t], dtype=np.uint8)
                     dataset.add_frame(
                         {
-                            "image": np.asarray(cam[t], dtype=np.uint8),
+                            "image": img,
+                            "wrist_image": img,
                             "state": np.asarray(qpos[t], dtype=np.float32),
                             "actions": np.asarray(act[t], dtype=np.float32),
                             "task": task_text,

@@ -9,10 +9,11 @@ from openpi.models import model as _model
 
 def make_libero_example() -> dict:
     """Creates a random input example for the Libero policy."""
-    # 删掉wrist_image，满足.h5结构
+    # wrist_image和image一样，满足.h5结构
     return {
         "observation/state": np.random.rand(8),
         "observation/image": np.random.randint(256, size=(224, 224, 3), dtype=np.uint8),
+        "observation/wrist_image": np.random.randint(256, size=(224, 224, 3), dtype=np.uint8),
         "prompt": "do something",
     }
 
@@ -36,9 +37,8 @@ class LiberoInputs(transforms.DataTransformFn):
     def __call__(self, data: dict) -> dict:
         base_image = _parse_image(data["observation/image"])
 
-        # 如果没有wrist_image，就补0
-        has_wrist = "observation/wrist_image" in data
-        wrist_raw = data["observation/wrist_image"] if has_wrist else np.zeros_like(base_image)
+        # Prefer real wrist image if available; otherwise fall back to base image.
+        wrist_raw = data.get("observation/wrist_image", base_image)
         wrist_image = _parse_image(wrist_raw)
 
         inputs = {
@@ -51,7 +51,7 @@ class LiberoInputs(transforms.DataTransformFn):
             },
             "image_mask": {
                 "base_0_rgb": np.True_,
-                "left_wrist_0_rgb": np.True_ if has_wrist else np.False_,
+                "left_wrist_0_rgb": np.True_,
                 # We only mask padding images for pi0 model, not pi0-FAST.
                 "right_wrist_0_rgb": np.True_ if self.model_type == _model.ModelType.PI0_FAST else np.False_,
             },

@@ -1,0 +1,77 @@
+import dataclasses
+
+import einops
+import numpy as np
+
+from openpi import transforms
+from openpi.models import model as _model
+
+
+def make_libero_example() -> dict:
+    """Creates a random input example for the Libero policy."""
+    # 删掉wrist_image，满足.h5结构
+    return {
+        "observation/state": np.random.rand(8),
+        "observation/image": np.random.randint(256, size=(224, 224, 3), dtype=np.uint8),
+        "prompt": "do something",
+    }
+
+def _parse_image(image) -> np.ndarray:
+    image = np.asarray(image)
+    if np.issubdtype(image.dtype, np.floating):
+        image = (255 * image).astype(np.uint8)
+    if image.shape[0] == 3:
+        image = einops.rearrange(image, "c h w -> h w c")
+    return image
+
+@dataclasses.dataclass(frozen=True)
+class LiberoInputs(transforms.DataTransformFn):
+    """
+    Converts dataset-specific input dict into model input dict.
+    Used for both training and inference.
+    """
+
+    model_type: _model.ModelType
+
+    def __call__(self, data: dict) -> dict:
+        base_image = _parse_image(data["observation/image"])
+
+        # 如果没有wrist_image，就补0
+        has_wrist = "observation/wrist_image" in data
+        wrist_raw = data["observation/wrist_image"] if has_wrist else np.zeros_like(base_image)
+        wrist_image = _parse_image(wrist_raw)
+
+        inputs = {
+            "state": data["observation/state"],
+            "image": {
+                "base_0_rgb": base_image,
+                "left_wrist_0_rgb": wrist_image,
+                # Keep right wrist padded (not provided in this setup).
+                "right_wrist_0_rgb": np.zeros_like(base_image),
+            },
+            "image_mask": {
+                "base_0_rgb": np.True_,
+                "left_wrist_0_rgb": np.True_ if has_wrist else np.False_,
+                # We only mask padding images for pi0 model, not pi0-FAST.
+                "right_wrist_0_rgb": np.True_ if self.model_type == _model.ModelType.PI0_FAST else np.False_,
+            },
+        }
+
+        if "actions" in data:
+            inputs["actions"] = data["actions"]
+
+        if "prompt" in data:
+            inputs["prompt"] = data["prompt"]
+
+        return inputs
+
+@dataclasses.dataclass(frozen=True)
+class LiberoOutputs(transforms.DataTransformFn):
+    """
+    Converts model output dict back to dataset-specific output dict.
+    Used for inference.
+    """
+
+    def __call__(self, data: dict) -> dict:
+        # Keep first 7 action dims for Libero-style control.
+        return {"actions": np.asarray(data["actions"][:, :7])}

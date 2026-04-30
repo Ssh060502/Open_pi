@@ -12,7 +12,6 @@ Expected H5 structure:
 
 import shutil
 from pathlib import Path
-
 import h5py
 import numpy as np
 import tyro
@@ -20,12 +19,9 @@ from lerobot.common.datasets.lerobot_dataset import HF_LEROBOT_HOME, LeRobotData
 
 REPO_NAME = "shenghe/libero" 
 
-
 def main(data_dir: str, *, push_to_hub: bool = False):
-    
     data_path = Path(data_dir)
 
-    # 解析 h5 文件列表
     if data_path.is_file() and data_path.suffix in [".h5", ".hdf5"]:
         h5_files = [data_path]
     else:
@@ -44,6 +40,7 @@ def main(data_dir: str, *, push_to_hub: bool = False):
         repo_id=REPO_NAME,
         robot_type="my_robot",  # 先定义成这个
         fps=10,  # 这个fps是10吗？
+        # 根据.h5文件，删掉wrist_image，只保留三个
         features={
             "image": {
                 "dtype": "image",
@@ -70,7 +67,6 @@ def main(data_dir: str, *, push_to_hub: bool = False):
         with h5py.File(h5_path, "r") as f:
             # 找所有 episode_* group(根据.h5文件结构)
             episode_keys = sorted([k for k in f.keys() if k.startswith("episode_")])
-            # ["episode_0", "episode_1", ...]
             if not episode_keys:
                 continue
 
@@ -105,7 +101,6 @@ def main(data_dir: str, *, push_to_hub: bool = False):
             push_videos=True,
             license="apache-2.0",
         )
-
 
 if __name__ == "__main__":
     tyro.cli(main)

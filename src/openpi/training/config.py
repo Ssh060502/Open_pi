@@ -777,7 +777,7 @@ _CONFIGS = [
         name="pi0_libero_low_mem_finetune_shenghe",
         # Here is an example of loading a pi0 model for LoRA fine-tuning.
         model=pi0_config.Pi0Config(paligemma_variant="gemma_2b_lora", action_expert_variant="gemma_300m_lora"),
-        data=LeRobotLiberoDataConfig(
+        data=LeRobotUR11DataConfig(
             repo_id="shenghe/libero",
             base_config=DataConfig(prompt_from_task=True),
             extra_delta_transform=True,

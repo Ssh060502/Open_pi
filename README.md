@@ -321,3 +321,15 @@ We will collect common issues and their solutions here. If you encounter an issu
 | Import errors when running examples       | Make sure you've installed all dependencies with `uv sync`. Some examples may have additional requirements listed in their READMEs.                    |
 | Action dimensions mismatch                | Verify your data processing transforms match the expected input/output dimensions of your robot. Check the action space definitions in your policy classes.                                  |
 | Diverging training loss                            | Check the `q01`, `q99`, and `std` values in `norm_stats.json` for your dataset. Certain dimensions that are rarely used can end up with very small `q01`, `q99`, or `std` values, leading to huge states and actions after normalization. You can manually adjust the norm stats as a workaround. |
+
+## shenghe的改动
+
+1. 创建 `examples/libero/convert_mydata.py` ，实现对文件类型的转换(从.h5转成lerobot)
+   - 定义输出文件地址 `repo_id=shenghe/libero`
+   - 根据.h5文件的结构，保留img, state, action, 并且把.h5中没有的wrist_img设置成和img一样的值
+   - 根据.h5文件的结构，设置loop循环读取数据，一帧一帧处理
+   - 又增加了 `examples/libero/convert.py` 文件，在原来的 `examples/libero/convert_mydata.py` 基础上，实现对于错误格式的episode的跳过，并在最后统计处理总处理条数和失败条数。
+2. 增加 `src/openpi/policies/ur11_policy.py` ，修改LiberoInputs类里对wrist_img的处理。
+3. 对原来的 `config.py`的更改
+   - 增加LeRobotUR11DataConfig类，该类是在原来LeRobotLiberoDataConfig类的基础上，调用 `ur11_policy.` 。
+   - 在_CONFIGS里增加一个 `pi0_libero_low_mem_finetune_shenghe` 微调，使用转换数据后的 `shenghe/libero` 数据地址，其他和 `pi0_libero_low_mem_finetune` 微调保持一致。

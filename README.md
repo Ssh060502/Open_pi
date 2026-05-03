@@ -324,7 +324,7 @@ We will collect common issues and their solutions here. If you encounter an issu
 
 ## shenghe的改动
 
-1. 创建 `examples/libero/convert_mydata.py` 文件，实现文件类型的转换(从 .h5 转成 lerobot )
+1. 创建 `examples/libero/convert_mydata.py` 文件，实现文件类型的转换(从 .h5 转成 lerobot)
    - 定义输出文件地址 `repo_id=shenghe/libero`
    - 根据 .h5 文件的结构，保留 img，state，action，并把 .h5 中没有的 wrist_img 设置成和 img 一样的值
    - 根据 .h5 文件的结构，设置 loop 循环读取数据，一帧一帧处理

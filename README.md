@@ -324,12 +324,12 @@ We will collect common issues and their solutions here. If you encounter an issu
 
 ## shenghe的改动
 
-1. 创建 `examples/libero/convert_mydata.py` ，实现文件类型的转换(从.h5转成 lerobo)
+1. 创建 `examples/libero/convert_mydata.py` ，实现文件类型的转换(从 .h5 转成 lerobo)
    - 定义输出文件地址 `repo_id=shenghe/libero`
-   - 根据 .h5 文件的结构，保留img，state，action，并把 .h5 中没有的 wrist_img 设置成和 img 一样的值
+   - 根据 .h5 文件的结构，保留 img，state，action，并把 .h5 中没有的 wrist_img 设置成和 img 一样的值
    - 根据 .h5 文件的结构，设置 loop 循环读取数据，一帧一帧处理
-   - 又增加了 `examples/libero/convert.py` 文件，在原来的 `examples/libero/convert_mydata.py` 基础上，实现对于错误格式的episode的跳过，并在最后统计处理总处理条数和失败条数。
-2. 增加 `src/openpi/policies/ur11_policy.py` ，修改L iberoInputs 类里对 wrist_img 的处理。
-3. 对原来的 `config.py`的更改
+2. 增加了 `examples/libero/convert.py` 文件，在原来的 `examples/libero/convert_mydata.py` 基础上，实现对于错误格式的episode的跳过，并在最后统计处理总处理条数和失败条数。
+3. 增加 `src/openpi/policies/ur11_policy.py` ，修改L iberoInputs 类里对 wrist_img 的处理。
+4. 对原来的 `config.py`的更改
    - 增加 LeRobotUR11DataConfig 类，该类是在原来 LeRobotLiberoDataConfig 类的基础上，调用 `ur11_policy.` 。
    - 在 _CONFIGS 里增加一个 `pi0_libero_low_mem_finetune_shenghe` 微调，repo_id 为 lerobot 数据的地址 `shenghe/libero` ，其他和 `pi0_libero_low_mem_finetune` 微调保持一致。
